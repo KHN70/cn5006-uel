@@ -1,66 +1,101 @@
-var express=require("express")
-var fs= require("fs")
-var app=express()
-// add midware function for body parsing
+mongoose = require('mongoose');
+//app = express();
+const MONGO_URI = 'mongodb://localhost:27017/Week8';
+mongoose.connect(MONGO_URI, {useUnifiedTopology: true,useNewUrlParser: true})
+; const db = mongoose.connection;
+db.on('error', function(err)
+{console.log("Error occured during connection"+err)
+}
+);
+db.once('connected', function() {
+console.log(`Connected to ${MONGO_URI}`);
+});
+// creating the scheme
+const PersonScheme = new mongoose.Schema({ name: {type: String, required: true},
+age: Number, Gender:String, Salary:Number
+});
+// creating model named as modelname with collection named as personCollection
+const person_doc = mongoose.model('modelname', PersonScheme,'personCollection');
+// creating a single document
+const doc1 = new person_doc({ name: 'Yousef',age:44,Gender:"Male",Salary:3456 }
+);
+// adding one document in the collection
+// doc1
+//  .save()
+//  .then((doc1) => {
+//  console.log("New Article Has been Added Into Your DataBase.",doc1);
+//  })
+//  .catch((err) => {
+//  console.error(err);
+//  });
+ manypersons=[{ name: 'Simon',age:42,Gender:"Male",Salary:3456 }
+ //        ,{ name: 'Neesha',age:23,Gender:"Female",Salary:1000 }
+    ,{ name: 'Mary',age:27,Gender:"Female",Salary:5402 },
+         { name: 'Mike',age:40,Gender:"Male",Salary:4519 }
+     ]
+   
+   
+    person_doc.insertMany(manypersons).then(function(){
+    console.log("Data inserted",manypersons) // Success
+    }).catch(function(error){
+    console.log(error) // Failure
+    }); 
 
-var bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
+    person_doc.find({})
 
-app.get('/',function(req, res){
-    res.send("Hello it is my first express application")
-})
-app.listen(5000,function(){
-    console.log("server is running on port 5000")
-})
+            .sort({Salary: 1})
+            .select('name Salary age')
+            .limit(10)
+            .exec()
+            .then(docs =>{
+                console.log("showing multiple documents")
+                docs.forEach(function(Doc){
+                    console.log(Doc.age,Doc.name,Doc.Salary);
+                })
+            })
+            .catch(err => {
+                console.error(err)
+            })
 
-app.get('/about',function(req,res){
-    res.send("This is a basic express application")
-})
-app.get('/users/:userId/books/:bookId',function(req,res){
-    res.send(req.params)
-})
-app.get('/GetStudents',function(req,res){
-    studentdata={}
-    fs.readFile(__dirname + "/" + "Student.json", 'utf8',
-        function(err, data) { console.log(data);
-            res.json({ 'status':true, 'Status_Code':200,
-                'requested at': req.localtime, 'requrl':req.url,
-                'request Method':req.method, 'studentdata':JSON.parse(data)
-            });
-        }
-    );
-})
-app.get('/GetStudentid/:id',(req,res)=>{
-    studentdata={}
-    fs.readFile(__dirname + "/" + "Student.json", 'utf8',
-        function(err, data) {
+var givenage=30
 
-            var students= JSON.parse(data)
-            var student=students["Student"+req.params.id]
-            console.log("student",student)
-            if(student)
+person_doc.find({Gender:"Female",age:{$gte:givenage}})
 
-                res.json(student)
-                else
-                res.json({ 'status':true, 'Status_Code':200,
-            'requested at': req.localtime, 'requrl':req.url,
-        'request Method':req.method, 'studentdata':JSON.parse(data)});
-        });
+//find all users
+
+.sort({Salary: 1})
+.select('name Salary age')
+.limit(10)
+.exec()
+.then(docs => {
+    console.log("showing age greater than 15",givenage)
+    docs.forEach(function(Doc){
+        console.log(Doc.age,Doc.name);
+    })
+})
+.catch(err => {
+    console.error(err)
+})
+// counting all the documents
+person_doc.countDocuments().exec()
+.then(count=>{
+console.log("Total documents Count :", count)
+}) .catch(err => {
+console.error(err)
 })
 
-app.get('/studentinfo',function(req,res){
-    res.sendFile('StudentInfo.html', { root: __dirname});
-})
-app.post('/submit-data', function(req,res){
-    var name = req.body.firstName + ' ' + req.body.lastName+ ' ';
-
-    var Age = req.body.myAge + ' Gender:' + req.body.gender + ' '
-    Qual = 'Qualification'+ req.body.Qual
-    console.log(req.body.Qual)
-    res.send({
-        status: true,
-        message: 'form Details', data: {
-            name: name, age:Age, Qualification:Qual,
-        }
-    });
+person_doc.deleteMany({ age: { $gte: 40 } })
+.exec()
+.then(docs=>{
+console.log('deleted documents are:',docs);
+}).catch(function(error){
+console.log(error);
+});
+person_doc.updateMany({ Gender: "Female" },{Salay:5555})
+.exec()
+.then(docs=>{
+console.log("update")
+console.log(docs); // Success
+}).catch(function(error){
+console.log(error); // Failure
 });
