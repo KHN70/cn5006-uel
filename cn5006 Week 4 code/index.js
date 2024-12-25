@@ -53,7 +53,7 @@ app.get('/studentinfo',function(req,res){
 })
 app.post('/submit-data', function(req,res){
     var name = req.body.firstName + ' ' + req.body.lastName+ ' ';
-
+    
     var Age = req.body.myAge + ' Gender:' + req.body.gender + ' '
     Qual = 'Qualification'+ req.body.Qual
     console.log(req.body.Qual)
